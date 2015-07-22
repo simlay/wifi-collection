@@ -16,35 +16,65 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+var settings = {
+    geolocation: {
+        maximumAge: 60,
+        timeout: 5,
+        enableHighAccuracy: true
+    }
+};
+
+var geolocation = {
+    watchId: null,
+    onSuccess: function (position) {
+        geolocation.last_position = position;
+        geolocation.position_list.push(position);
+        console.log(position);
+    },
+    onError: function (error) {
+        console.log(error);
+    },
+    last_position: null,
+    position_list: []
+};
+
+var dataStore = {
+    upload: function() {
+    }
+};
+
 var app = {
     // Application Constructor
     initialize: function() {
         this.bindEvents();
+        console.log("navigator.geolocation works well");
+        geolocation.watchId = navigator.geolocation.watchPosition(
+            geolocation.onSuccess,
+            geolocation.onError,
+            settings.geolocation
+        );
     },
     // Bind Event Listeners
     //
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
+        // Upload button.
+        document.addEventListener('upload', dataStore.upload, false);
+        // Stop sampling button.
+        document.addEventListener('stopCollection', this.stopCollection, false);
+        document.addEventListener('showData', this.showData, false);
     },
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicitly call 'app.receivedEvent(...);'
-    onDeviceReady: function() {
-        app.receivedEvent('deviceready');
+    stopCollection: function() {
+        console.log('Stopping watch!');
+        navigator.geolocation.clearWatch(geolocation.watchId);
+    },
+    showData: function() {
+
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
     }
 };
 
