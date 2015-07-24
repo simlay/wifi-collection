@@ -17,43 +17,113 @@
  * under the License.
  */
 
-var settings = {
+var settings = {//{{{
     geolocation: {
         maximumAge: 60,
         timeout: 5,
         enableHighAccuracy: true
+    },
+    ssid: {
+        //maximumAge: 60,
+        timeout: 5*1000,
+    },
+    upload: {
+        url: 'http://127.0.0.1:5984/location/',
+        http_timeout: 60,
+        sample_timout: 1000*60*5,
+        username:'',
+        password:''
+    },
+    show: {
+      displayTimout: 3*1000,
+      uploadTimout: 60*5*1000
     }
-};
+};//}}}
 
-var geolocation = {
+var ssid = {//{{{
+    watchId: null,
+    last_ssid_query: null,
+    ssid_query_list: [],
+    onSuccess: function (ssid_data) {
+        console.log(ssid_data);
+        ssid.last_ssid_query = ssid_data;
+        ssid.ssid_query_list.push(ssid_data);
+    },
+    onError: function (error) {
+        console.log(error);
+    },
+    start: function() {
+      ssid.watchId = window.setInterval(
+          function () {
+              WifiWizard.getScanResults(ssid.onSuccess, ssid.onError);
+          },
+          settings.ssid.timeout
+      );
+
+    }
+};//}}}
+
+var geolocation = {//{{{
     watchId: null,
     onSuccess: function (position) {
-        geolocation.last_position = position;
-        geolocation.position_list.push(position);
-        console.log(position);
+        var position_dict = {
+            time: position.timestamp,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+        };
+        geolocation.last_position = position_dict;
+        geolocation.position_list.push(position_dict);
+        console.log(position_dict);
     },
     onError: function (error) {
         console.log(error);
     },
     last_position: null,
-    position_list: []
-};
-
-var dataStore = {
-    upload: function() {
-    }
-};
-
-var app = {
-    // Application Constructor
-    initialize: function() {
-        this.bindEvents();
-        console.log("navigator.geolocation works well");
+    position_list: [],
+    start: function() {
         geolocation.watchId = navigator.geolocation.watchPosition(
             geolocation.onSuccess,
             geolocation.onError,
             settings.geolocation
         );
+    },
+    stop: function () {
+        navigator.geolocation.clearWatch(geolocation.watchId);
+    }
+};//}}}
+
+var dataStore = {//{{{
+    upload: function() {
+      xmlhttp = new XMLHttpRequest();
+      xmlhttp.open(
+          'POST',
+          settings.upload.url,
+          false
+          // settings.upload.username,
+          // settings.password.password
+      );
+
+    },
+    show: function() {
+        document.getElementById('lastSample').innerText = JSON.stringify(geolocation.last_position) + JSON.stringify(ssid.last_ssid_query);
+    },
+    start: function() {
+      dataStore.showId = window.setInterval(
+          dataStore.show,
+          settings.show.displayTimout
+      );
+      //dataStore.uploadId = window.setTimeout(dataStore.show, settings.show.uploadTimout);
+    }
+};//}}}
+
+var app = {//{{{
+    // Application Constructor
+    initialize: function() {
+        this.bindEvents();
+        geolocation.start();
+        ssid.start();
+        dataStore.start();
     },
     // Bind Event Listeners
     //
@@ -64,18 +134,12 @@ var app = {
         document.addEventListener('upload', dataStore.upload, false);
         // Stop sampling button.
         document.addEventListener('stopCollection', this.stopCollection, false);
-        document.addEventListener('showData', this.showData, false);
+        document.addEventListener('showData', dataStore.show, false);
     },
     stopCollection: function() {
         console.log('Stopping watch!');
-        navigator.geolocation.clearWatch(geolocation.watchId);
+        geolocation.stop();
     },
-    showData: function() {
-
-    },
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-    }
-};
+};//}}}
 
 app.initialize();
