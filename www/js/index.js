@@ -20,17 +20,17 @@
 var settings = {//{{{
     geolocation: {
         maximumAge: 60,
-        timeout: 5,
+        timeout: 1*1000,
         enableHighAccuracy: true
     },
     ssid: {
         //maximumAge: 60,
-        timeout: 5*1000,
+        timeout: 1*1000,
     },
     upload: {
-        url: 'http://127.0.0.1:5984/location/',
+        url: '',
         http_timeout: 60,
-        sample_timout: 1000*60*5,
+        sample_timout: 1000*10,
         username:'',
         password:''
     },
@@ -66,15 +66,19 @@ var ssid = {//{{{
 var geolocation = {//{{{
     watchId: null,
     onSuccess: function (position) {
-        var position_dict = {
-            time: position.timestamp,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy
-        };
-        geolocation.last_position = position_dict;
-        geolocation.position_list.push(position_dict);
-        console.log(position_dict);
+        if (ssid.last_ssid_query)
+        {
+            var position_dict = {
+                time: position.timestamp,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                ssids: ssid.last_ssid_query
+            };
+            geolocation.last_position = position_dict;
+            geolocation.position_list.push(position_dict);
+            console.log(position_dict);
+        }
     },
     onError: function (error) {
         console.log(error);
@@ -99,11 +103,21 @@ var dataStore = {//{{{
       xmlhttp.open(
           'POST',
           settings.upload.url,
-          false
+          true
           // settings.upload.username,
           // settings.password.password
       );
-
+      xmlhttp.setRequestHeader('Content-Type', 'application/json');
+      xmlhttp.setRequestHeader('Referer', 'phone');
+      data = geolocation.position_list;
+      geolocation.position_list = [];
+      xmlhttp.onreadystatechange = function () {
+          if (xmlhttp.readyState == 4 && xmlhttp.status != 201) {
+              alert(xmlhttp.responseText);
+          }
+      };
+      if(data)
+          xmlhttp.send(JSON.stringify({'docs': data}));
     },
     show: function() {
         document.getElementById('lastSample').innerText = JSON.stringify(geolocation.last_position) + JSON.stringify(ssid.last_ssid_query);
@@ -113,7 +127,7 @@ var dataStore = {//{{{
           dataStore.show,
           settings.show.displayTimout
       );
-      //dataStore.uploadId = window.setTimeout(dataStore.show, settings.show.uploadTimout);
+      dataStore.uploadId = window.setInterval(dataStore.upload, settings.upload.sample_timout);
     }
 };//}}}
 
