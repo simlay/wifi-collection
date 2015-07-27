@@ -1,7 +1,30 @@
 #!/usr/bin/env python
 
 import simplejson
-import pandas as pd
+import itertools
+
+
+def sliding_window(seq, width=2):
+    it = iter(seq)
+    result = tuple(itertools.islice(it, width))
+    if len(result) == width:
+        yield result
+    for elm in it:
+        result = result[1:] + (elm,)
+        yield result
+
+
+def cond_chunk(dataset, cond, argc=2):
+    result = [[]]
+
+    for slide in sliding_window(dataset, argc):
+        if cond(slide):
+            result.append([])
+
+        result[-1].append(slide[-1])
+
+    return result
+
 
 def extract_data(filename):
 
@@ -9,15 +32,17 @@ def extract_data(filename):
         contents = simplejson.load(f)
 
     for index, row in enumerate(contents['rows']):
-        lat = row['doc']['latitude']
-        lon = row['doc']['longitude']
-        acc = row['doc']['accuracy']
+        lat   = row['doc']['latitude']
+        lon   = row['doc']['longitude']
+        acc   = row['doc']['accuracy']
+        time  = row['doc']['time']
 
         ssids = dict()
         for elm in row['doc']['ssids']:
             ssids[elm['BSSID']] = elm['frequency'], elm['level']
 
-        yield (lat, lon, acc, ssids)
+        yield (lat, lon, acc, time, ssids)
+
 
 def splitfilter(dataset, cond):
     retval = ([], [])
@@ -26,13 +51,28 @@ def splitfilter(dataset, cond):
 
     return retval
 
+
 def main():
-    acceptable_accuracy = lambda (lat, lon, acc, ssids): acc > 10
-    (failed, succ) = splitfilter(extract_data("db_dump.json"), acceptable_accuracy)
-    onefourth = len(succ) // 4
-    testing, training = succ[:onefourth], succ[onefourth:]
-    print training[0]
-    print testing[0]
+
+    time_key = lambda (_lat, _lon, _acc, time, _ssids): time
+    extracted_data = sorted(extract_data("db_dump.json"), key=time_key)
+
+    acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc > 10
+    (failed, succ) = splitfilter(extracted_data, acceptable_accuracy)
+
+    num_seconds = 60
+    acceptable_t_delta = lambda (
+        (_lata, _lona, _acca, timea, _ssidsa),
+        (_latb, _lonb, _accb, timeb, _ssidsb)
+    ): timeb - timea > num_seconds * 1000
+    datasets = cond_chunk(succ, acceptable_t_delta, 2)
+    datasets = sorted(datasets, key=len)
+    print len(datasets)
+    print len(datasets[-1])
+
+    # onefourth = len(succ) // 4
+    # testing, training = succ[:onefourth], succ[onefourth:]
+
 
 
 if __name__ == '__main__':
