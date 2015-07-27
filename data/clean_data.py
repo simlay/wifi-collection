@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import simplejson
+import csv
 import itertools
+import simplejson
 
 
 def sliding_window(seq, width=2):
@@ -61,18 +62,29 @@ def main():
     (failed, succ) = splitfilter(extracted_data, acceptable_accuracy)
 
     NUM_SECONDS = 30
-    acceptable_t_delta = lambda (
-        (_lata, _lona, _acca, timea, _ssidsa),
-        (_latb, _lonb, _accb, timeb, _ssidsb)
-    ): timeb - timea > NUM_SECONDS * 1000
+    acceptable_t_delta = lambda \
+        (A, B): time_key(B) - time_key(A) > NUM_SECONDS * 1000
+
     datasets = cond_chunk(succ, acceptable_t_delta, 2)
     datasets = sorted(datasets, key=len)
 
     print map(len, datasets)
 
+    with open("tables.csv", 'wb') as csvfile:
+        writer = csv.writer(csvfile)
+
+        for set_number, good_data in enumerate(datasets):
+            for sample_number, sample in enumerate(good_data):
+                (lat, lon, acc, time, bssids) = sample
+                for mac in bssids:
+                    writer.writerow((
+                      set_number, sample_number, 
+                      lat, lon, acc, time, 
+                      bssids[mac][0], bssids[mac][0]
+                    ))
+
     # onefourth = len(succ) // 4
     # testing, training = succ[:onefourth], succ[onefourth:]
-
 
 
 if __name__ == '__main__':
