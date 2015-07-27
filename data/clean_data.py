@@ -57,18 +57,18 @@ def main():
     time_key = lambda (_lat, _lon, _acc, time, _ssids): time
     extracted_data = sorted(extract_data("db_dump.json"), key=time_key)
 
-    acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc > 10
+    acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc < 10
     (failed, succ) = splitfilter(extracted_data, acceptable_accuracy)
 
-    num_seconds = 60
+    NUM_SECONDS = 30
     acceptable_t_delta = lambda (
         (_lata, _lona, _acca, timea, _ssidsa),
         (_latb, _lonb, _accb, timeb, _ssidsb)
-    ): timeb - timea > num_seconds * 1000
+    ): timeb - timea > NUM_SECONDS * 1000
     datasets = cond_chunk(succ, acceptable_t_delta, 2)
     datasets = sorted(datasets, key=len)
-    print len(datasets)
-    print len(datasets[-1])
+
+    print map(len, datasets)
 
     # onefourth = len(succ) // 4
     # testing, training = succ[:onefourth], succ[onefourth:]
