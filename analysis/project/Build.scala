@@ -34,7 +34,7 @@ object WifiCollectionBuild extends Build {
     // Increase max memory for JVM for both testing and runtime
     .settings(javaOptions in (Test,run) += "-Xmx8G")
     // Put all managed dependency libraries in /lib_managed
-    // .settings(retrieveManaged := true)
+    .settings(retrieveManaged := true)
     // Managed dependencies
     .settings(libraryDependencies ++= Seq(
       "com.cra.figaro" %% "figaro" % "3.2.1.1"
