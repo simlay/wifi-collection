@@ -26,11 +26,12 @@ var settings = {//{{{
     ssid: {
         //maximumAge: 60,
         timeout: 1*1000,
+        wifiNumLevels: 20,
     },
     upload: {
         url: '',
         http_timeout: 60,
-        sample_timout: 1000*10,
+        sample_timout: 1000*60,
         username:'',
         password:''
     },
@@ -45,9 +46,9 @@ var ssid = {//{{{
     last_ssid_query: null,
     ssid_query_list: [],
     onSuccess: function (ssid_data) {
-        console.log(ssid_data);
         ssid.last_ssid_query = ssid_data;
-        ssid.ssid_query_list.push(ssid_data);
+        //ssid.ssid_query_list.push(ssid_data);
+        //console.log(ssid_data);
     },
     onError: function (error) {
         console.log(error);
@@ -55,7 +56,11 @@ var ssid = {//{{{
     start: function() {
       ssid.watchId = window.setInterval(
           function () {
-              WifiWizard.getScanResults(ssid.onSuccess, ssid.onError);
+              WifiWizard.getScanResults(
+                  [{'numLevels': settings.ssid.wifiNumLevels}],
+                  ssid.onSuccess,
+                  ssid.onError
+              );
           },
           settings.ssid.timeout
       );
@@ -77,7 +82,7 @@ var geolocation = {//{{{
             };
             geolocation.last_position = position_dict;
             geolocation.position_list.push(position_dict);
-            console.log(position_dict);
+            // console.log(position_dict);
         }
     },
     onError: function (error) {
@@ -114,6 +119,8 @@ var dataStore = {//{{{
       xmlhttp.onreadystatechange = function () {
           if (xmlhttp.readyState == 4 && xmlhttp.status != 201) {
               alert(xmlhttp.responseText);
+          } else {
+              console.log('Sent DATA! ' + JSON.stringify(data));
           }
       };
       if(data)
