@@ -16,15 +16,16 @@ def sliding_window(seq, width=2):
 
 
 def cond_chunk(dataset, cond, argc=2):
-    result = [[]]
+    result = []
 
     for slide in sliding_window(dataset, argc):
         if cond(slide):
-            result.append([])
+            yield result
+            result = []
 
-        result[-1].append(slide[-1])
+        result.append(slide[-1])
 
-    return result
+    yield result
 
 
 def extract_data(filename):
