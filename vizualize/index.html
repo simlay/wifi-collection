@@ -7,12 +7,25 @@
         margin: 0;
         padding: 0;
       }
+
+      #selection {
+            position: fixed;
+            z-index: 10;
+        }
+
+
     </style>
+
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="index.js"></script>
     </head>
     <body>
-        <div id="map-canvas"></div>
+        <div id="map-canvas" style="height: 500px"></div>
+
+        <!-- ====== this div will hold the select box ==== -->
+        <div id="selection"></div>
+        <!-- ============================================= -->
+
     </body>
 </html>
