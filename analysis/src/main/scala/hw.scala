@@ -4,8 +4,8 @@ import java.io.File
 
 object Hi {
   def main(args: Array[String]) = {
-    val reader = CSVReader.open(new File("/home/peval/git/wifi-collection/analysis/src/main/resources/tables.csv"))
-    
+    val reader = CSVReader.open(new File("tables.csv"))
+
     println(args.length)
     println("Hi!")
   }
