@@ -37,6 +37,7 @@ object WifiCollectionBuild extends Build {
     .settings(retrieveManaged := true)
     // Managed dependencies
     .settings(libraryDependencies ++= Seq(
-      "com.cra.figaro" %% "figaro" % "3.2.1.1"
+      "com.cra.figaro" %% "figaro" % "3.2.1.1",
+      "com.github.tototoshi" %% "scala-csv" % "1.2.2"
     ))
 }
