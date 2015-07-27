@@ -1,6 +1,8 @@
 var all_hotspots = [];
 var points = [];
-var overlays = [];
+
+var circles = [];
+var markers = [];
 
 var bcircle = {
   url: 'blue-circle.png',
@@ -21,8 +23,11 @@ function handleSelected(opt) {
   var selected_hotspot = all_hotspots[opt.selectedIndex - 1];
 
   // clear map overlays
-  while (overlays[0]){
-    overlays.pop().setMap(null);
+  while (markers[0]){
+    markers.pop().setMap(null);
+  }
+  while (circles[0]){
+    circles.pop().setMap(null);
   }
 
   // Render accuracy if requested
@@ -40,7 +45,7 @@ function handleSelected(opt) {
           title:"Hello World!"
       });
 
-      overlays.push(marker);
+      markers.push(marker);
 
       var infowindow = new google.maps.InfoWindow({
           content: JSON.stringify(position_dict)
@@ -59,7 +64,7 @@ function handleSelected(opt) {
           strokeColor: "#000088",//stroke color,
           strokeOpacity: 0.4//opacity from 0.0 to 1.0
       });
-      overlays.push(circle);
+      circles.push(circle);
     });
   }
 
@@ -71,7 +76,7 @@ function handleSelected(opt) {
 
     var i;
     for (i = 0; i < hotspots_sample.length; i++) {
-      if (hotspots_sample[i].BSSID == selected_hotspot) { // Not yet in all_hotspots array
+      if (hotspots_sample[i].BSSID == selected_hotspot.BSSID) { // Not yet in all_hotspots array
         console.log("")
         //all_hotspots.push(hotspots_sample[i].BSSID)
 
@@ -83,7 +88,7 @@ function handleSelected(opt) {
           title:"Hello World!"
         });
 
-        overlays.push(marker);
+        markers.push(marker);
 
         var infowindow = new google.maps.InfoWindow({
             content: JSON.stringify(hotspots_sample[i])
@@ -97,14 +102,18 @@ function handleSelected(opt) {
         var circle = new google.maps.Circle({
             center: point,
             //radius: position_dict.accuracy,
+            //radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
+            _level: hotspots_sample[i].level,
+
             radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
             map: map,
             fillColor: "#550000",
-            fillOpacity: 0.1, //opacity from 0.0 to 1.0,
+            fillOpacity: 0.05, //opacity from 0.0 to 1.0,
             strokeColor: "#880000",//stroke color,
-            strokeOpacity: 0.4//opacity from 0.0 to 1.0
+            strokeOpacity: 0.2//opacity from 0.0 to 1.0
         });
-        overlays.push(circle);
+
+        circles.push(circle);
       /*} else {
         var circle = new google.maps.Circle({
               center: point,
@@ -132,6 +141,32 @@ function handleSelected(opt) {
   //}
 }
 
+var debug = false;
+
+var constant = 600;
+
+
+window.onload = function() {
+
+  gui = new dat.GUI();
+
+  gui.add(this, 'debug').name("Debug");  
+
+  gui.add(this, 'constant').name("Constant").onChange(function(newValue) {
+
+    var i;
+    for (i = 0; i < circles.length; i++) {
+      circles[i].setRadius(Math.pow(10,-circles[i]._level/20)/constant);
+      //circles[i].setRadius(constant*1000*Math.pow(10,circles[i]._level/20));
+    }
+    //  )
+
+  });
+};
+
+
+
+
 function plotMap() {
   onSuccess = function(data) {
 
@@ -158,7 +193,7 @@ function plotMap() {
 
       
       
-
+      
       var bounds = new google.maps.LatLngBounds();
 
       $.each(data.rows, function( key, row) {
@@ -166,10 +201,13 @@ function plotMap() {
 
           hotspots_sample = position_dict.ssids;
 
+
+
           var i;
           for (i = 0; i < hotspots_sample.length; i++) {
-              if ($.inArray(hotspots_sample[i].BSSID, all_hotspots) == -1) { // Not yet in all_hotspots array
-                  all_hotspots.push(hotspots_sample[i].BSSID)
+              var all_hotspots_BSSIDs = $.map(all_hotspots, function(val) {return val.BSSID});
+              if ($.inArray(hotspots_sample[i].BSSID, all_hotspots_BSSIDs) == -1) { // Not yet in all_hotspots array
+                  all_hotspots.push({"BSSID": hotspots_sample[i].BSSID, "SSID": hotspots_sample[i].SSID})
               }
           }
 
@@ -184,7 +222,7 @@ function plotMap() {
               title:"Hello World!"
           });
 
-          overlays.push(marker);
+          markers.push(marker);
 
           var infowindow = new google.maps.InfoWindow({
               content: JSON.stringify(position_dict)
@@ -204,7 +242,7 @@ function plotMap() {
               strokeOpacity: 0.4//opacity from 0.0 to 1.0
           });
 
-          overlays.push(circle);
+          circles.push(circle);
 
           // Extend bound for centering
           bounds.extend(marker.position);
@@ -217,7 +255,13 @@ function plotMap() {
       // Populate Select Dropdown
       var i;
       for (i = 0; i < all_hotspots.length; i++) {
-          select_html += '<option> ' + all_hotspots[i] + '<\/option>';
+
+          if (all_hotspots[i].BSSID == "c8:b3:73:4f:50:1a") {
+            select_html += ('<option>' + all_hotspots[i].SSID + ' (COOL DATA!) <\/option>');
+          } else {
+
+            select_html += '<option> ' + all_hotspots[i].SSID + '<\/option>';
+          }
       }
       select_html += '<\/select>';
       document.getElementById("selection").innerHTML = select_html;
