@@ -79,7 +79,7 @@ def main():
                 for mac in bssids:
                     writer.writerow((
                       set_number, sample_number, 
-                      lat, lon, acc, time, 
+                      lat, lon, acc, time, mac,
                       bssids[mac][0], bssids[mac][0]
                     ))
 
