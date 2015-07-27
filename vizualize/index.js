@@ -11,6 +11,9 @@ function plotMap() {
           document.getElementById('map-canvas'),
           mapOptions
       );
+
+      var bounds = new google.maps.LatLngBounds();
+
       $.each(data.rows, function( key, row) {
           position_dict = row.doc;
           point = new google.maps.LatLng(position_dict.latitude, position_dict.longitude);
@@ -36,7 +39,13 @@ function plotMap() {
               // strokeOpacity: //opacity from 0.0 to 1.0
           });
 
+          // Extend bound for centering
+          bounds.extend(marker.position);
+
       });
+
+      // Center map on markers
+      map.fitBounds(bounds);
 
       //points = [new google.maps.LatLng(37.782551, -122.445368)];
       //debugger;
