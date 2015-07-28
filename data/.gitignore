@@ -1,2 +1,3 @@
 db_dump.json
 tables.csv
+_all_docs?include_docs=true
