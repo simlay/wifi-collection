@@ -1,6 +1,6 @@
 default:tables.csv
 
-tables.csv:db_dump.json
+tables.csv:db_dump.json clean_data.py
 	./clean_data.py
 	./get_common_sample.sh 1
 
