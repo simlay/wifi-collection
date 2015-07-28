@@ -77,9 +77,6 @@ function handleSelected(opt) {
     var i;
     for (i = 0; i < hotspots_sample.length; i++) {
       if (hotspots_sample[i].BSSID == selected_hotspot.BSSID) { // Not yet in all_hotspots array
-        console.log("")
-        //all_hotspots.push(hotspots_sample[i].BSSID)
-
 
         var marker = new google.maps.Marker({
           icon: bcircle,
@@ -98,12 +95,12 @@ function handleSelected(opt) {
           infowindow.open(map,marker);
         });
 
-
         var circle = new google.maps.Circle({
             center: point,
             //radius: position_dict.accuracy,
             //radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
             _level: hotspots_sample[i].level,
+            _freq: hotspots_sample[i].frequency,
 
             radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
             map: map,
@@ -114,31 +111,11 @@ function handleSelected(opt) {
         });
 
         circles.push(circle);
-      /*} else {
-        var circle = new google.maps.Circle({
-              center: point,
-              radius: position_dict.accuracy,
-              map: map,
-              fillColor: "#555555",
-              fillOpacity: 0.1, //opacity from 0.0 to 1.0,
-              strokeColor: "#888888",//stroke color,
-              strokeOpacity: 0.4//opacity from 0.0 to 1.0
-        });
-        overlays.push(circle);
-        // draw black circle*/
       }
     }
 
   });
 
-
-  //var i =  - 1; 
-  //if (i > -1) {
-  //  GEvent.trigger(gmarkers[i],"click");
-  //}
-  //else {
-  //  map.closeInfoWindow();
-  //}
 }
 
 var debug = false;
@@ -156,7 +133,10 @@ window.onload = function() {
 
     var i;
     for (i = 0; i < circles.length; i++) {
-      circles[i].setRadius(Math.pow(10,-circles[i]._level/20)/constant);
+      var k =  constant;//40;//-27.55; // 32.44;
+      var exp = (-10 -circles[i]._level - k - 20*Math.log10(circles[i]._freq) ) / 20;
+      var dist = Math.pow(10, exp);
+      circles[i].setRadius(dist *1);
       //circles[i].setRadius(constant*1000*Math.pow(10,circles[i]._level/20));
     }
     //  )
