@@ -1,0 +1,10 @@
+analysis/.cache-main
+analysis/.classpath
+analysis/.project
+analysis/.settings/
+analysis/bin/
+analysis/lib_managed/
+analysis/project/project/
+analysis/project/target/
+analysis/target/
+
