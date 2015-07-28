@@ -6,7 +6,7 @@ object Hi {
   def main(args: Array[String]) = {
     val reader = CSVReader.open(new File("tables.csv"))
 
-    println(args.length)
+    println(reader.all())
     println("Hi!")
   }
 }
