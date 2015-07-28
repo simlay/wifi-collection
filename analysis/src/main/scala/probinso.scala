@@ -1,10 +1,11 @@
-import com.cra.figaro.library.compound.If
-import com.cra.figaro.library.atomic.continuous.Normal
-import com.github.tototoshi.csv.CSVReader
 import java.io.File
-import com.cra.figaro.language.Element
-import com.cra.figaro.library.atomic.continuous.MultivariateNormal
+
 import com.cra.figaro.language.Constant
+import com.cra.figaro.language.Element
+
+import com.cra.figaro.library.atomic.continuous.Normal
+
+import com.github.tototoshi.csv.CSVReader
 
 class transmitterLocationModel {
 
@@ -20,7 +21,7 @@ class transmitterLocationModel {
 
   // Radial distance from trasmitter
   val tPow : Element[Double] = Constant(0.0)
-  def powerToRadius(d : Element[Double]) = Constant(d.value)
+  def powerToRadius(d : Element[Double]) = Constant(d.value * 10)
 
   val tRad : Element[Double] = powerToRadius(tPow)
 }
@@ -28,10 +29,11 @@ class transmitterLocationModel {
 
 object probinso {
 
-  def assertEvidence(model: transmitterLocationModel) {
-    model.sLat.observe(4.4)
-    model.sLon.observe(5.5)
-    model.sRad.observe(10)
+  def assertEvidence(model: transmitterLocationModel,
+      Latitude : Double, Longitude : Double, Radius : Double) {
+    model.sLat.observe(Latitude)
+    model.sLon.observe(Longitude)
+    model.sRad.observe(Radius)
   }
 
   def main(args: Array[String]) = {
