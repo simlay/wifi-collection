@@ -8,6 +8,8 @@ import com.cra.figaro.algorithm.learning.ExpectationMaximization
 import com.cra.figaro.library.atomic.continuous.Normal
 
 import com.github.tototoshi.csv.CSVReader
+import scala.math.log10
+import scala.math.pow
 
 class selfLocationModel {
 
@@ -30,12 +32,14 @@ class selfLocationModel {
 
 class transmitterRadiusModel(frequency: Double) {
   // Radial distance from trasmitter
-  val tPow : Element[Double] = Constant(0.0)
+  val tPow : Element[Double] = Constant(0.0) // should probably add noise
 
-  def powerToRadius(tPow : Element[Double]) = {
+  def powerToRadius(power_level : Element[Double]) = {
     val k : Double = 0.0
-    k
+    pow(-10.0 - power_level.value - k -20*log10(frequency)/20.0,10.0)
   }
+
+  val tRadius : Element[Double] = Constant(powerToRadius(tPow))
 
 }
 
