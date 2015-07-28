@@ -38,6 +38,6 @@ object probinso {
     val reader = CSVReader.open(new File("tables.csv"))
 
     println(reader.all())
-    println("Hi!")
+    println("Yo Dog!")
   }
 }
