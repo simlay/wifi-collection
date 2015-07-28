@@ -3,11 +3,13 @@ import java.io.File
 import com.cra.figaro.language.Constant
 import com.cra.figaro.language.Element
 
+import com.cra.figaro.algorithm.learning.ExpectationMaximization
+
 import com.cra.figaro.library.atomic.continuous.Normal
 
 import com.github.tototoshi.csv.CSVReader
 
-class transmitterLocationModel {
+class selfLocationModel {
 
   // Location of Self
   val sLat : Element[Double] = Constant(0.0)
@@ -19,25 +21,30 @@ class transmitterLocationModel {
   val latSPosition : Element[Double] = Normal(sLat, radSPosition)
   val lonSPosition : Element[Double] = Normal(sLon, radSPosition)
 
-  // Radial distance from trasmitter
-  val tPow : Element[Double] = Constant(0.0)
-  def powerToRadius(d : Element[Double]) = Constant(d.value * 10)
-
-  val tRad : Element[Double] = powerToRadius(tPow)
+  def assertEvidence(Latitude : Double, Longitude : Double, Radius : Double) {
+    sLat.observe(Latitude)
+    sLon.observe(Longitude)
+    sRad.observe(Radius)
+  }
 }
 
+class transmitterRadiusModel(frequency: Double) {
+  // Radial distance from trasmitter
+  val tPow : Element[Double] = Constant(0.0)
+
+  def powerToRadius(tPow : Element[Double]) = {
+    val k : Double = 0.0
+    k
+  }
+
+}
 
 object probinso {
 
-  def assertEvidence(model: transmitterLocationModel,
-      Latitude : Double, Longitude : Double, Radius : Double) {
-    model.sLat.observe(Latitude)
-    model.sLon.observe(Longitude)
-    model.sRad.observe(Radius)
-  }
-
   def main(args: Array[String]) = {
     val reader = CSVReader.open(new File("tables.csv"))
+    for (line <- reader.all()) println(line)
+        
 
     println(reader.all())
     println("Yo Dog!")
