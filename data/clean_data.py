@@ -77,11 +77,11 @@ def main():
         for set_number, good_data in enumerate(datasets):
             for sample_number, sample in enumerate(good_data):
                 (lat, lon, acc, time, bssids) = sample
-                for mac in bssids:
+                for mac, (frequency, level) in bssids.iteritems():
                     writer.writerow((
                       set_number, sample_number, 
-                      lat, lon, acc, time, mac,
-                      bssids[mac][0], bssids[mac][0]
+                      lat, lon, acc, time,
+                      mac, frequency, level
                     ))
 
     # onefourth = len(succ) // 4
