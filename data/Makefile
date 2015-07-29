@@ -6,3 +6,7 @@ tables.csv:db_dump.json clean_data.py
 
 db_dump.json:
 	./getdata.sh
+
+clean:
+	rm tables.cvs
+	rm db_dump.json
