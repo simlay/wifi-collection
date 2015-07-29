@@ -1,3 +1,8 @@
+
+// ===============================================================================================
+// Globals
+// ===============================================================================================
+
 var all_hotspots = [];
 var selected_positions = [];
 var points = [];
@@ -5,6 +10,13 @@ var rects = [];
 
 var circles = [];
 var markers = [];
+
+var mapdata;
+
+var debug = false;
+var constant = 600;
+
+var circlesVisible = true;
 
 var bcircle = {
   url: 'blue-circle.png',
@@ -16,10 +28,38 @@ var bcircle = {
   anchor: new google.maps.Point(8, 8)
 };
 
-var mapdata;
+
+// ===============================================================================================
+// Utility, standalone functions
+// ===============================================================================================
+
+function getDistanceFromLatLonInM(lat1,lon1,lat2,lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1); 
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+  return d*1000.0;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+
+// Simple 1-d gaussian
+function gaussian(mean, std, x) {
+  var m = std * Math.sqrt(2 * Math.PI);
+  var e = Math.exp(-Math.pow(x - mean, 2) / (2 * std*std));
+  return e / m;
+}
 
 
-var circlesVisible = true;
+
 
 function toggleCircleVisibility() {
   circlesVisible = !circlesVisible;
@@ -37,9 +77,72 @@ function setCircleVisibility(b) {
 
 }
 
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+
+function normalizeOpacity() {
+
+  var max = 0;
+
+  // Find opacity interval
+  var i = 0;
+  for (i = 0; i < rects.length; i++) {
+    if (rects[i].fillOpacity > max) {
+      max = rects[i].fillOpacity
+    }
+  }
+
+  // Normalize all rectangles
+  var i = 0;
+  for (i = 0; i < rects.length; i++) {
+    var color_cap = 0.7;
+    var rgb = hslToRgb(color_cap*(1-(rects[i].fillOpacity/max)), 0.5, 0.5);
+    rects[i].setOptions({
+      fillOpacity: 0.5,//rects[i].fillOpacity/max
+      fillColor: rgbToHex(rgb[0], rgb[1], rgb[2])
+    });
+  }
+
+}
+
+
+
+function calcTotalProb(lat, lon) {
+
+  var totalP = 0;
+  var i = 0;
+  for (i = 0; i < selected_positions.length; i++) {
+    
+    //var point = new google.maps.LatLng(selected_positions[i].latitude, selected_positions[i].longitude);
+    var distance = getDistanceFromLatLonInM(lat, lon, selected_positions[i].posdict.latitude, selected_positions[i].posdict.longitude);
+    //console.log("distance: ", distance)
+
+
+    var prob = gaussian(selected_positions[i].circle.radius, 10.0, distance)
+
+    totalP += prob;// Math.exp(-distance/100);
+  }
+  
+  
+  var t = totalP;// / (0.4*selected_positions.length);
+  //console.log(t);
+  return t;
+
+}
+
+
 // ======= This function handles selections from the select box ====
 function handleSelected(opt) {
-  console.log(opt.selectedIndex - 1);
+
+  circlesVisible = true;
+  //console.log(opt.selectedIndex - 1);
 
   var selected_hotspot = all_hotspots[opt.selectedIndex - 1];
 
@@ -152,23 +255,47 @@ function handleSelected(opt) {
 
     var i = 0;
     for (i = 0; i < rects.length; i++) {
-      rects[i].setOptions({fillOpacity: calcTotalProb(rects[i].lat, rects[i].lon)});
+      var tp = calcTotalProb(rects[i].lat, rects[i].lon);
+      rects[i].setOptions({
+        fillOpacity: tp
+        //fillColor: hslToRgb(tp, 0.5, 0.5)
+
+
+      });
     }
 
     normalizeOpacity();
-
-
-
   }
 }
 
-var debug = false;
+function hslToRgb(h, s, l){
+    var r, g, b;
 
-var constant = 600;
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
 
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
 
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
 
-
+// ===============================================================================================
+// Set up DAT.GUI
+// ===============================================================================================
 
 window.onload = function() {
 
@@ -186,10 +313,6 @@ window.onload = function() {
       circles[i].setRadius(dist * 1);
       //circles[i].setRadius(constant*1000*Math.pow(10,circles[i]._level/20));
     }
-    //  )
-
-  
-
   });
 
   gui.add(this, 'toggleCircleVisibility').name("Toggle Circles");
@@ -197,79 +320,11 @@ window.onload = function() {
 };
 
 
-function getDistanceFromLatLonInM(lat1,lon1,lat2,lon2) {
-  var R = 6371; // Radius of the earth in km
-  var dLat = deg2rad(lat2-lat1);  // deg2rad below
-  var dLon = deg2rad(lon2-lon1); 
-  var a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-    ; 
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  var d = R * c; // Distance in km
-  return d*1000.0;
-}
-
-function deg2rad(deg) {
-  return deg * (Math.PI/180)
-}
-
-//function gaussian(mean, variance, x) {
-//  return (1/(variance*Math.sqrt(2*Math.PI))) * Math.exp(-(x-mean)*(x-mean)/(2*variance*variance));
-//}
-
-function gaussian(mean, std, x) {
-  var m = std * Math.sqrt(2 * Math.PI);
-  var e = Math.exp(-Math.pow(x - mean, 2) / (2 * std*std));
-  return e / m;
-}
-
-function normalizeOpacity() {
-
-  var max = 0;
-
-  var i = 0;
-  for (i = 0; i < rects.length; i++) {
-    if (rects[i].fillOpacity > max) {
-      max = rects[i].fillOpacity
-    }
-  }
-
-  var i = 0;
-  for (i = 0; i < rects.length; i++) {
-    rects[i].setOptions({fillOpacity: rects[i].fillOpacity/max});
-  }
 
 
-}
-
-
-
-function calcTotalProb(lat, lon) {
-
-  var totalP = 0;
-  var i = 0;
-  for (i = 0; i < selected_positions.length; i++) {
-    
-    //var point = new google.maps.LatLng(selected_positions[i].latitude, selected_positions[i].longitude);
-    var distance = getDistanceFromLatLonInM(lat, lon, selected_positions[i].posdict.latitude, selected_positions[i].posdict.longitude);
-    //console.log("distance: ", distance)
-
-
-    var prob = gaussian(selected_positions[i].circle.radius, 10.0, distance)
-
-    totalP += prob;// Math.exp(-distance/100);
-  }
-  
-  
-  var t = totalP;// / (0.4*selected_positions.length);
-  //console.log(t);
-  return t;
-
-}
-
-
+// ===============================================================================================
+// Main program
+// ===============================================================================================
 
 function plotMap() {
   onSuccess = function(data) {
@@ -416,7 +471,8 @@ function plotMap() {
                                       startLon + ((endLon - startLon)/stepsLon) * j),
               new google.maps.LatLng( startLat + ((endLat - startLat)/stepsLat) * (i+1),
                                       startLon + ((endLon - startLon)/stepsLon) * (j+1))
-              )
+              ),
+            zIndex: -10
           });
 
           rects.push(r);
