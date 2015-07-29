@@ -10,17 +10,17 @@ import java.io.File
 import com.cra.figaro.library.atomic.continuous.AtomicNormal
 import com.cra.figaro.library.atomic.continuous.AtomicNormal
 
-
-class Position() {
-  val positionMean : Element[List[Double]] = Constant(List(1.0, 1.0))
-  val positionVariance = 3.0;
+/*
+class PositionOld(lat: Double, long: Double, acc: Double) {
+  val positionMean : Element[List[Double]] = Constant(List(lat, long))
+  val positionVariance = acc;
   val positionCovarianceMatrix = Constant(List(List(positionVariance, 0.0), List(0.0, positionVariance)))
   val positionDistribution = MultivariateNormal(positionMean, positionCovarianceMatrix)
 }
 
 
-class Transmitter() {
-  val position = new Position() 
+class Transmitter2() {
+  val position = new Position(1.0, 1.0, 1.0) 
 }
 
 class TransmitterData() {
@@ -28,28 +28,46 @@ class TransmitterData() {
   val frequency = 2400
 }
 
-class Receiver(transmittersVisData: List[TransmitterData]) {
-  val position = new Position()
-  val transmittersVisibleData = transmittersVisData
-  val distanceDistributions : List[Element[Normal]] = List()
+class ReceiverOld(pos: Position, tData: TransmitterData) {
+  val position = pos
+  val transmitterData = tData
   
-  for ( i <- 1 to transmittersVisible.length ) {
-    val distance = transmittersVisibleData(i).level // TODO SOME FUNCTION OF POWER LEVEL AND FREQUENCY
-    val variance = 2.0 // TODO SOME FUNCTION OF WIFI ROUTERS INTERFERING ONE ANOTHER
-    distanceDistributions ::: List( Normal(Constant(distance), Constant(variance)) )
-  }
+   val distance = transmitterData.level * 2 // TODO SOME FUNCTION OF POWER LEVEL AND FREQUENCY
+   val variance = 2.0 // TODO SOME FUNCTION OF WIFI ROUTERS INTERFERING ONE ANOTHER
+   
+  var distanceDistribution = Normal(Constant(distance), Constant(variance))
+  
+  //for ( i <- 1 to transmittersVisibleData.length ) {
+   
+    //distanceDistributions = distanceDistributions ::: List( Normal(Constant(distance), Constant(variance)) )
+  //}
   
 }
 
 
 
-object Hi {
+object Program {
+  
+  // TODO Specify which transmitter
+  def getTransmitterProbabilityAtPosition(lat: Double, long: Double) = {
+    
+    // Sum up all probabilities from all receivers and that particular transmitter at desired location
+    
+    
+    
+
+  }  
+  
+  
   def main(args: Array[String]) = {
+    println("Started.")
     val reader = CSVReader.open(new File("tables.csv"))
+    println("Loaded data.")
     val data = reader.all()
     
+    var receivers : List[Receiver] = List()
+    
     val t = new Transmitter()
-    val n = new Receiver(List())
     
     
     /*val variance = 3.0
@@ -57,17 +75,23 @@ object Hi {
     val position = MultivariateNormal(mean, List(List(variance, 0.0), List(0.0, variance)))
     */
     
+    for (line <- data) {
+      println(line)
+      var r = new Receiver(
+          new Position(line(2).toDouble, line(3).toDouble, line(4).toDouble),
+          new TransmitterData()
+          )
+      receivers = receivers ::: List(r)
+
+    }
     
     
     
-    
-    
-    println(data(1))
-    
-    
-    println("Hi!")
+    println("Done!")
+    println(receivers.length)
+
   }
 }
-
+*/
 
 
