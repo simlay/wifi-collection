@@ -3,25 +3,25 @@ import com.github.tototoshi.csv.CSVReader
 import math.{sqrt, pow, log10, abs}
 
 import com.cra.figaro.library.compound.{If}
-import com.cra.figaro.library.atomic.continuous.Normal
-import com.cra.figaro.library.atomic.continuous.Uniform
-import com.cra.figaro.library.atomic.continuous.MultivariateNormal
+import com.cra.figaro.library.atomic.continuous.{Uniform, Normal, MultivariateNormal}
 import com.cra.figaro.language.{Element, Constant, Apply}
-import com.cra.figaro.algorithm.factored.VariableElimination
 import com.cra.figaro.algorithm.factored.beliefpropagation.MPEBeliefPropagation
+import com.cra.figaro.algorithm.factored.beliefpropagation.BeliefPropagation
 
 
 
 object simlay {
 
-  class Transmitter(frequency:Double) {
-    val latitude  : Element[Double] = Uniform(-90, 90)
-    val longitude : Element[Double] = Uniform(-90, 90)
+  class Transmitter(frequency:Double, initial_lat:Double, initial_lon:Double) {
+
+    val latitude  : Element[Double] = Normal(initial_lat, 100)//Uniform(-90, 90)
+    val longitude : Element[Double] = Normal(initial_lon, 100)//Uniform(-180, 180)
 
 
     def distance (x1:Double, y1:Double, x2:Double, y2:Double) = {
       sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2))
     }
+
     def assertSample(sample_lat:Double, sample_lon:Double, sample_power:Double) {
       def power = Apply(
         latitude, longitude,
@@ -36,40 +36,30 @@ object simlay {
     }
   }
 
-
-  val sLat : Element[Double] = Uniform(-90, 90)
-  val sLon : Element[Double] = Uniform(-180, 180)
-
-
-
   def main(args: Array[String]) = {
     println("BEGIN!")
 
     val reader = CSVReader.open(new File("tables.csv"))
     val lines = reader.all()
-    val transmitter = new Transmitter(2412.0)
-    var lat = 0.0
-    var lon = 0.0
+    val first_line = lines(0)
+    val frequency = first_line(7).toDouble
+    var lat = first_line(2).toDouble
+    var lon = first_line(3).toDouble
     var power = 0.0
+    println("Creating transmiter at " + lat + ", " + lon + ", freq: " + frequency)
+    val transmitter = new Transmitter(frequency, lat, lon)
 
     for(line <- lines) {
       lat = line(2).toDouble
       lon = line(3).toDouble
       power = line(8).toDouble
       transmitter.assertSample(lat, lon, power)
-
-      // println("lat: " + lat)
-      // println("lon: " + lon)
-
-      // sPower.observe(power)
     }
-    val algorithm = MPEBeliefPropagation(10)
+    val algorithm = MPEBeliefPropagation(1)
     algorithm.start()
     val most_likely_lat = algorithm.mostLikelyValue(transmitter.latitude)
     val most_likely_lon = algorithm.mostLikelyValue(transmitter.longitude)
-
-    // println("Lat: " + xLat.value)
-    // println("Lon: " + xLon.value)
+    algorithm.stop()
 
   }
 }
