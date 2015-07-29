@@ -1,57 +1,62 @@
 import java.io.File
 import com.github.tototoshi.csv.CSVReader
+import math.{ sqrt, pow , log10}
 
-import com.cra.figaro.library.compound.If
+import com.cra.figaro.library.compound.{If}
 import com.cra.figaro.library.atomic.continuous.Normal
-import com.cra.figaro.algorithm.learning.GeneralizedEM
+import com.cra.figaro.library.atomic.continuous.Uniform
 import com.cra.figaro.library.atomic.continuous.MultivariateNormal
-import com.cra.figaro.language.Element
-import com.cra.figaro.language.Constant
+import com.cra.figaro.language.{Element, Constant, Apply}
 import com.cra.figaro.algorithm.factored.VariableElimination
 
 
 
 object simlay {
-  class transmitterLocationModel {
+  val sLat : Element[Double] = Uniform(-180, 180)
+  val sLon : Element[Double] = Uniform(-90, 90)
 
-    // Location of Self
-    val sLat : Element[Double] = Constant(0.0)
-    val sLon : Element[Double] = Constant(0.0)
-    val sRad : Element[Double] = Constant(0.0)
+  val xLat : Element[Double] = Uniform(-90, 90)
+  val xLon : Element[Double] = Uniform(-90, 90)
+  val frequency: Int = 2412
 
-    val radSPosition : Element[Double] = Normal(sRad, 1) // should sigma be one?
-
-    val latSPosition : Element[Double] = Normal(sLat, radSPosition)
-    val lonSPosition : Element[Double] = Normal(sLon, radSPosition)
-
-    // Radial distance from trasmitter
-    val tPow : Element[Double] = Constant(0.0)
-    def powerToRadius(d : Element[Double]) = Constant(d.value)
-
-    val tRad : Element[Double] = powerToRadius(tPow)
-    def observe(lat:Double, lon:Double, radius:Double) {
-      latSPosition.observe(lat)
-      lonSPosition.observe(lon)
-      radSPosition.observe(radius)
-    }
+  def distance (x1:Double, y1:Double, x2:Double, y2:Double) = {
+    sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2))
   }
+
+  def power = Apply(
+    sLat, sLon, xLat, xLon,
+    (xs: Double, ys: Double, xa: Double, ya: Double) =>
+      20*log10(distance(xs, ys, xa, ya)) + 20*log10(frequency) + 100
+  )
+
+  val sPower : Element[Double] = Normal(power, 10)
+
 
   def main(args: Array[String]) = {
     println("BEGIN!")
-    val model = new transmitterLocationModel()
 
     val reader = CSVReader.open(new File("tables.csv"))
     val lines = reader.all()
+    var lat = 0.0
+    var lon = 0.0
+    var power = 0.0
+    println("Initial values")
+    println(xLat.value)
+    println(xLon.value)
     for(line <- lines) {
-
-      model.observe(
-        line(2).toDouble,
-        line(3).toDouble,
-        line(4).toDouble*10
-      )
+      lat = line(2).toDouble
+      lat = line(3).toDouble
+      power = line(8).toDouble
+      sLat.observe(lat)
+      sLat.observe(lon)
+      sPower.observe(power)
     }
+    println("Generative distribution values")
+    println(xLat.value)
+    println(xLon.value)
 
-    println(VariableElimination.probability(model.latSPosition, lines(0)(2).toDouble))
-    println(VariableElimination.probability(model.lonSPosition, lines(0)(3).toDouble))
+    println("Sample distribution values")
+    println(sLat.value)
+    println(sLon.value)
   }
 }
