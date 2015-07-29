@@ -59,7 +59,7 @@ def main():
     time_key = lambda (_lat, _lon, _acc, time, _ssids): time
     extracted_data = sorted(extract_data("db_dump.json"), key=time_key)
 
-    acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc < 10
+    acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc < 5
     (failed, succ) = splitfilter(extracted_data, acceptable_accuracy)
 
     NUM_SECONDS = 30
