@@ -9,13 +9,14 @@
     </author>
     <content src="index.html" />
     <plugin name="cordova-plugin-whitelist" version="1" />
+    <plugin name="cordova-plugin-geolocation" spec="^1.0.1" />
+    <plugin name="com.pylonproducts.wifiwizard" spec="https://github.com/simlay/WifiWizard" />
     <access origin="*" />
     <access origin="*.us-west-2.compute.amazonaws.com" />
     <allow-navigation href="*.us-west-2.compute.amazonaws.com" />
     <allow-navigation href="http://*/*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-
     <platform name="android">
         <allow-intent href="market:*" />
     </platform>
