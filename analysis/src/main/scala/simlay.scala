@@ -34,6 +34,14 @@ object simlay {
       sPower.addConstraint( (d : Double) => pow(0.02, abs(sample_power - d)))
 
     }
+    def inferLocation = {
+      val algorithm = MPEBeliefPropagation(1)
+      algorithm.start()
+      val most_likely_lat = algorithm.mostLikelyValue(latitude)
+      val most_likely_lon = algorithm.mostLikelyValue(longitude)
+      algorithm.stop()
+      (most_likely_lat, most_likely_lon)
+    }
   }
 
   def main(args: Array[String]) = {
@@ -54,12 +62,9 @@ object simlay {
       lon = line(3).toDouble
       power = line(8).toDouble
       transmitter.assertSample(lat, lon, power)
+
     }
-    val algorithm = MPEBeliefPropagation(1)
-    algorithm.start()
-    val most_likely_lat = algorithm.mostLikelyValue(transmitter.latitude)
-    val most_likely_lon = algorithm.mostLikelyValue(transmitter.longitude)
-    algorithm.stop()
+    println(transmitter.inferLocation)
 
   }
 }
