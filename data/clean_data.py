@@ -71,6 +71,7 @@ def main():
 
     print map(len, datasets)
 
+    acceptable_power    = lambda level : level > -75
     with open("tables.csv", 'wb') as csvfile:
         writer = csv.writer(csvfile)
 
@@ -78,11 +79,12 @@ def main():
             for sample_number, sample in enumerate(good_data):
                 (lat, lon, acc, time, bssids) = sample
                 for mac, (frequency, level) in bssids.iteritems():
-                    writer.writerow((
-                      set_number, sample_number, 
-                      lat, lon, acc, time,
-                      mac, frequency, level
-                    ))
+                    if acceptable_power(level):
+                        writer.writerow((
+                          set_number, sample_number, 
+                          lat, lon, acc, time,
+                          mac, frequency, level
+                        ))
 
     # onefourth = len(succ) // 4
     # testing, training = succ[:onefourth], succ[onefourth:]

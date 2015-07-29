@@ -1,5 +1,7 @@
 var all_hotspots = [];
+var selected_positions = [];
 var points = [];
+var rects = [];
 
 var circles = [];
 var markers = [];
@@ -16,6 +18,25 @@ var bcircle = {
 
 var mapdata;
 
+
+var circlesVisible = true;
+
+function toggleCircleVisibility() {
+  circlesVisible = !circlesVisible;
+  setCircleVisibility(circlesVisible);
+}
+
+
+function setCircleVisibility(b) {
+
+  var i = 0;
+  for (i = 0; i < circles.length; i++) {
+    circles[i].setVisible(b);
+  }
+
+
+}
+
 // ======= This function handles selections from the select box ====
 function handleSelected(opt) {
   console.log(opt.selectedIndex - 1);
@@ -29,6 +50,9 @@ function handleSelected(opt) {
   while (circles[0]){
     circles.pop().setMap(null);
   }
+
+  // Clear selected positions
+  selected_positions = [];
 
   // Render accuracy if requested
   if (opt.selectedIndex == 0) {
@@ -68,82 +92,82 @@ function handleSelected(opt) {
     });
   }
 
-  $.each(mapdata.rows, function(key, row) {
-    position_dict = row.doc;
-    hotspots_sample = position_dict.ssids;
+  // Hotspot selected
+  else {
+    $.each(mapdata.rows, function(key, row) {
+      position_dict = row.doc;
+      hotspots_sample = position_dict.ssids;
 
-    point = new google.maps.LatLng(position_dict.latitude, position_dict.longitude);
+      
 
-    var i;
-    for (i = 0; i < hotspots_sample.length; i++) {
-      if (hotspots_sample[i].BSSID == selected_hotspot.BSSID) { // Not yet in all_hotspots array
-        console.log("")
-        //all_hotspots.push(hotspots_sample[i].BSSID)
+      point = new google.maps.LatLng(position_dict.latitude, position_dict.longitude);
 
+      var i;
+      for (i = 0; i < hotspots_sample.length; i++) {
+        if (hotspots_sample[i].BSSID == selected_hotspot.BSSID) { // Not yet in all_hotspots array
 
-        var marker = new google.maps.Marker({
-          icon: bcircle,
-          position: point,
-          map: map,
-          title:"Hello World!"
-        });
+          
 
-        markers.push(marker);
-
-        var infowindow = new google.maps.InfoWindow({
-            content: JSON.stringify(hotspots_sample[i])
-        });
-
-        google.maps.event.addListener(marker, 'click', function() {
-          infowindow.open(map,marker);
-        });
-
-
-        var circle = new google.maps.Circle({
-            center: point,
-            //radius: position_dict.accuracy,
-            //radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
-            _level: hotspots_sample[i].level,
-
-            radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
+          var marker = new google.maps.Marker({
+            icon: bcircle,
+            position: point,
             map: map,
-            fillColor: "#550000",
-            fillOpacity: 0.05, //opacity from 0.0 to 1.0,
-            strokeColor: "#880000",//stroke color,
-            strokeOpacity: 0.2//opacity from 0.0 to 1.0
-        });
+            title:"Hello World!"
+          });
 
-        circles.push(circle);
-      /*} else {
-        var circle = new google.maps.Circle({
+          markers.push(marker);
+
+          var infowindow = new google.maps.InfoWindow({
+              content: JSON.stringify(hotspots_sample[i])
+          });
+
+          google.maps.event.addListener(marker, 'click', function() {
+            infowindow.open(map,marker);
+          });
+
+          var circle = new google.maps.Circle({
               center: point,
-              radius: position_dict.accuracy,
+              //radius: position_dict.accuracy,
+              //radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
+              _level: hotspots_sample[i].level,
+              _freq: hotspots_sample[i].frequency,
+
+              radius: Math.pow(10,-hotspots_sample[i].level/20)/600,
               map: map,
-              fillColor: "#555555",
-              fillOpacity: 0.1, //opacity from 0.0 to 1.0,
-              strokeColor: "#888888",//stroke color,
-              strokeOpacity: 0.4//opacity from 0.0 to 1.0
-        });
-        overlays.push(circle);
-        // draw black circle*/
+              fillColor: "#550000",
+              fillOpacity: 0.05, //opacity from 0.0 to 1.0,
+              strokeColor: "#880000",//stroke color,
+              strokeOpacity: 0.2//opacity from 0.0 to 1.0
+          });
+
+          selected_positions.push({"posdict" : position_dict, "circle": circle});
+
+          circles.push(circle);
+        }
       }
+
+    });
+
+    // Update colors
+
+    var i = 0;
+    for (i = 0; i < rects.length; i++) {
+      rects[i].setOptions({fillOpacity: calcTotalProb(rects[i].lat, rects[i].lon)});
     }
 
-  });
+    normalizeOpacity();
 
 
-  //var i =  - 1; 
-  //if (i > -1) {
-  //  GEvent.trigger(gmarkers[i],"click");
-  //}
-  //else {
-  //  map.closeInfoWindow();
-  //}
+
+  }
 }
 
 var debug = false;
 
 var constant = 600;
+
+
+
 
 
 window.onload = function() {
@@ -156,14 +180,94 @@ window.onload = function() {
 
     var i;
     for (i = 0; i < circles.length; i++) {
-      circles[i].setRadius(Math.pow(10,-circles[i]._level/20)/constant);
+      var k =  constant;//40;//-27.55; // 32.44;
+      var exp = (-10 -circles[i]._level - k - 20*Math.log10(circles[i]._freq) ) / 20;
+      var dist = Math.pow(10, exp);
+      circles[i].setRadius(dist * 1);
       //circles[i].setRadius(constant*1000*Math.pow(10,circles[i]._level/20));
     }
     //  )
 
+  
+
   });
+
+  gui.add(this, 'toggleCircleVisibility').name("Toggle Circles");
+
 };
 
+
+function getDistanceFromLatLonInM(lat1,lon1,lat2,lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2-lat1);  // deg2rad below
+  var dLon = deg2rad(lon2-lon1); 
+  var a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c; // Distance in km
+  return d*1000.0;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+
+//function gaussian(mean, variance, x) {
+//  return (1/(variance*Math.sqrt(2*Math.PI))) * Math.exp(-(x-mean)*(x-mean)/(2*variance*variance));
+//}
+
+function gaussian(mean, std, x) {
+  var m = std * Math.sqrt(2 * Math.PI);
+  var e = Math.exp(-Math.pow(x - mean, 2) / (2 * std*std));
+  return e / m;
+}
+
+function normalizeOpacity() {
+
+  var max = 0;
+
+  var i = 0;
+  for (i = 0; i < rects.length; i++) {
+    if (rects[i].fillOpacity > max) {
+      max = rects[i].fillOpacity
+    }
+  }
+
+  var i = 0;
+  for (i = 0; i < rects.length; i++) {
+    rects[i].setOptions({fillOpacity: rects[i].fillOpacity/max});
+  }
+
+
+}
+
+
+
+function calcTotalProb(lat, lon) {
+
+  var totalP = 0;
+  var i = 0;
+  for (i = 0; i < selected_positions.length; i++) {
+    
+    //var point = new google.maps.LatLng(selected_positions[i].latitude, selected_positions[i].longitude);
+    var distance = getDistanceFromLatLonInM(lat, lon, selected_positions[i].posdict.latitude, selected_positions[i].posdict.longitude);
+    //console.log("distance: ", distance)
+
+
+    var prob = gaussian(selected_positions[i].circle.radius, 10.0, distance)
+
+    totalP += prob;// Math.exp(-distance/100);
+  }
+  
+  
+  var t = totalP;// / (0.4*selected_positions.length);
+  //console.log(t);
+  return t;
+
+}
 
 
 
@@ -177,8 +281,6 @@ function plotMap() {
                         '<option selected> - Render accuracy / hotspots - <\/option>';
       // =====================================
 
-      
-
       var mapOptions = {
         zoom: 13,
         center: new google.maps.LatLng(45.465892400000001317, -122.69269230000000448),
@@ -188,10 +290,6 @@ function plotMap() {
           document.getElementById('map-canvas'),
           mapOptions
       );
-
-
-
-      
       
       
       var bounds = new google.maps.LatLngBounds();
@@ -257,16 +355,74 @@ function plotMap() {
       for (i = 0; i < all_hotspots.length; i++) {
 
           if (all_hotspots[i].BSSID == "c8:b3:73:4f:50:1a") {
-            select_html += ('<option>' + all_hotspots[i].SSID + ' (COOL DATA!) <\/option>');
+            select_html += ('<option>' + all_hotspots[i].SSID + ' (' + all_hotspots[i].BSSID + ') COOL DATA! <\/option>');
           } else {
 
-            select_html += '<option> ' + all_hotspots[i].SSID + '<\/option>';
+            select_html += '<option> ' + all_hotspots[i].SSID + ' (' + all_hotspots[i].BSSID + ') ' + '<\/option>';
           }
       }
       select_html += '<\/select>';
       document.getElementById("selection").innerHTML = select_html;
 
       
+      // Draw grid
+
+      
+
+      var stepsLat = 100;
+      var stepsLon = 100;
+
+      var startLat = 45.580789;
+      var startLon = -122.573943;
+      var endLat = 45.578496;
+      var endLon = -122.570550;
+
+      /*
+      var rectangle = new google.maps.Rectangle({
+          strokeColor: '#AA0000',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#440000',
+          fillOpacity: 0.25,
+          map: map,
+          bounds: new google.maps.LatLngBounds(
+            new google.maps.LatLng(startLat, startLon),
+            new google.maps.LatLng(endLat, endLon))
+        });
+      */
+
+
+      var i = 0;
+      for (i = 0; i < stepsLat; i++) {
+
+        var j = 0;
+        for (j = 0; j < stepsLon; j++) {
+
+          var lat =  ((startLat + ((endLat - startLat)/stepsLat) * i) + (startLat + ((endLat - startLat)/stepsLat) * (i+1))) / 2;
+          var lon = ((startLon + ((endLon - startLon)/stepsLon) * j) + (startLon + ((endLon - startLon)/stepsLon) * (j+1))) / 2;
+          var opacity = getDistanceFromLatLonInM(lat, lon, 45.5798, -122.5723)/200;
+
+          var r = new google.maps.Rectangle({
+            strokeColor: '#0000FF',
+            strokeOpacity: 0.0,
+            strokeWeight: 2,
+            fillColor: '#0000FF',
+            fillOpacity: opacity,
+            lat: lat,
+            lon: lon,
+            map: map,
+            bounds: new google.maps.LatLngBounds(
+              new google.maps.LatLng( startLat + ((endLat - startLat)/stepsLat) * i,
+                                      startLon + ((endLon - startLon)/stepsLon) * j),
+              new google.maps.LatLng( startLat + ((endLat - startLat)/stepsLat) * (i+1),
+                                      startLon + ((endLon - startLon)/stepsLon) * (j+1))
+              )
+          });
+
+          rects.push(r);
+        }
+
+      }
 
 
 
