@@ -28,6 +28,15 @@ var bcircle = {
   anchor: new google.maps.Point(8, 8)
 };
 
+var apoint = {
+  url: 'access_point_medium.png',
+  // This marker is 20 pixels wide by 32 pixels tall.
+  size: new google.maps.Size(64, 64),
+  // The origin for this image is 0,0.
+  origin: new google.maps.Point(0,0),
+  // The anchor for this image is the base of the flagpole at 0,32.
+  anchor: new google.maps.Point(32, 32)
+};
 
 // ===============================================================================================
 // Utility, standalone functions
@@ -90,25 +99,37 @@ function rgbToHex(r, g, b) {
 function normalizeOpacity() {
 
   var max = 0;
+  var maxRectI = 0;
 
   // Find opacity interval
   var i = 0;
   for (i = 0; i < rects.length; i++) {
     if (rects[i].fillOpacity > max) {
       max = rects[i].fillOpacity
+      maxRectI = i;
     }
   }
 
   // Normalize all rectangles
   var i = 0;
   for (i = 0; i < rects.length; i++) {
-    var color_cap = 0.7;
+    var color_cap = 0.6;
     var rgb = hslToRgb(color_cap*(1-(rects[i].fillOpacity/max)), 0.5, 0.5);
     rects[i].setOptions({
-      fillOpacity: 0.5,//rects[i].fillOpacity/max
+      fillOpacity: 0.3,// + rects[i].fillOpacity/(2*max),//rects[i].fillOpacity/max
       fillColor: rgbToHex(rgb[0], rgb[1], rgb[2])
     });
   }
+
+  // Add marker to most likely router location
+  var marker = new google.maps.Marker({
+          icon: apoint,
+          position: new google.maps.LatLng(rects[maxRectI].lat, rects[maxRectI].lon),
+          map: map,
+          title:"Hello World!"
+      });
+
+      markers.push(marker);
 
 }
 
