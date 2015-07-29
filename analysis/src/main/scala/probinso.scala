@@ -1,13 +1,9 @@
 import java.io.File
-
 import scala.math.{abs, log10, pow, sqrt}
-
-import com.cra.figaro.language.Apply
-import com.cra.figaro.language.Element
-import com.cra.figaro.library.atomic.continuous.Normal
-import com.cra.figaro.library.atomic.continuous.Uniform
-
+import com.cra.figaro.language.{Apply, Element, Constant}
+import com.cra.figaro.library.atomic.continuous.{Normal, Uniform}
 import com.github.tototoshi.csv.CSVReader
+import com.cra.figaro.algorithm.factored.beliefpropagation.MPEBeliefPropagation
 
 
 class transmitterModel(frequency: Double) {
@@ -16,6 +12,9 @@ class transmitterModel(frequency: Double) {
   val xLon : Element[Double] = Uniform(-180.0, 180.0)
 
   def assertEvidence(lat : Double, lon : Double, p : Double) {
+
+    val sLat : Element[Double] = Constant(lat)
+    val sLon : Element[Double] = Constant(lon)
 
     val _dist  : Element[Double] = Apply(xLat, xLon, sLat, sLon,
       (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
@@ -28,15 +27,16 @@ class transmitterModel(frequency: Double) {
 
     val power  : Element[Double] = Normal(_power, 5)
 
-    power.addConstraint( (d : Double) => pow(0.02, abs(p - d)) )
+    power.addConstraint((d : Double) => pow(0.02, abs(p - d)))
   }
 
   def infer = {
      val algorithm = MPEBeliefPropagation(10)
      algorithm.start()
-     retval = algorithm.mostLikelyValue(xLat, xLon)
+     val retLat = algorithm.mostLikelyValue(xLat)
+     val retLon = algorithm.mostLikelyValue(xLon)
      algorithm.stop()
-     retval
+     (retLat, retLon)
   }
 }
 
@@ -46,14 +46,16 @@ object probinso {
     val reader = CSVReader.open(new File("tables.csv"))
     var transmitters : Map[String, transmitterModel] = Map()
     for (line <- reader.all()) {
-      println(line)
-      if (! transmitters.exists(_ == line(6)))
+      if (!(transmitters.contains(line(6).toString)))
         transmitters += (line(6) -> new transmitterModel(line(7).toDouble))
 
       transmitters(line(6)).assertEvidence(line(2).toDouble, line(3).toDouble,  line(8).toDouble)
     }
 
-    println(reader.all())
+    for ((key, value) <- transmitters)
+      println(value.infer)
+
+    println()
     println("Yo Dog!")
   }
 }
