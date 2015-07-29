@@ -5,8 +5,13 @@ import math.{sqrt, pow, log10, abs}
 import com.cra.figaro.library.compound.{If}
 import com.cra.figaro.library.atomic.continuous.{Uniform, Normal, MultivariateNormal}
 import com.cra.figaro.language.{Element, Constant, Apply}
+
 import com.cra.figaro.algorithm.factored.beliefpropagation.MPEBeliefPropagation
 import com.cra.figaro.algorithm.factored.beliefpropagation.BeliefPropagation
+
+import com.cra.figaro.algorithm.sampling.MetropolisHastings
+import com.cra.figaro.algorithm.sampling.ProposalScheme
+import com.cra.figaro.algorithm.sampling.Importance
 
 
 
@@ -14,8 +19,8 @@ object simlay {
 
   class Transmitter(frequency:Double, initial_lat:Double, initial_lon:Double) {
 
-    val latitude  : Element[Double] = Normal(initial_lat, 100)//Uniform(-90, 90)
-    val longitude : Element[Double] = Normal(initial_lon, 100)//Uniform(-180, 180)
+    val latitude  : Element[Double] = Normal(initial_lat, 0.01)//Uniform(-90, 90)
+    val longitude : Element[Double] = Normal(initial_lon, 0.01)//Uniform(-180, 180)
 
 
     def distance (x1:Double, y1:Double, x2:Double, y2:Double) = {
@@ -23,15 +28,15 @@ object simlay {
     }
 
     def assertSample(sample_lat:Double, sample_lon:Double, sample_power:Double) {
-      def power = Apply(
+      val power = Apply(
         latitude, longitude,
         (x: Double, y: Double) =>
-          20*log10(distance(sample_lon, x, sample_lat, y)) + 20*log10(frequency) + 100
+          20*log10(distance(sample_lon, x, sample_lat, y)) + 20*log10(frequency) + 10
       )
 
-      val sPower : Element[Double] = Normal(power, 10)
+      val normalPower : Element[Double] = Normal(power, 10)
 
-      sPower.addConstraint( (d : Double) => pow(0.02, abs(sample_power - d)))
+      normalPower.addConstraint((d : Double) => pow(0.02, abs(sample_power - d)))
 
     }
     def inferLocation = {
@@ -41,6 +46,26 @@ object simlay {
       val most_likely_lon = algorithm.mostLikelyValue(longitude)
       algorithm.stop()
       (most_likely_lat, most_likely_lon)
+    }
+
+    def inferLocationMH = {
+      val algorithm = MetropolisHastings(20000, ProposalScheme.default, latitude, longitude)
+      algorithm.start()
+      val likely_latitude = algorithm.expectation(latitude, (i: Double) => i)
+
+      val likely_longitude = algorithm.expectation(longitude, (i: Double) => i)
+      algorithm.kill()
+      (likely_latitude, likely_longitude)
+
+    }
+
+    def inferLocationImportance = {
+      val importance = Importance(latitude)
+      importance.start()
+      Thread.sleep(1000)
+      importance.stop()
+
+      println(importance.distribution(latitude).toList) //Infer the probability that the painting is authentic.
     }
   }
 
@@ -64,7 +89,8 @@ object simlay {
       transmitter.assertSample(lat, lon, power)
 
     }
-    println(transmitter.inferLocation)
+    // println(transmitter.inferLocation)
+    println(transmitter.inferLocationMH)
 
   }
 }
