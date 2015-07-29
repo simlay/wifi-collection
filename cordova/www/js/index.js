@@ -141,11 +141,6 @@ var dataStore = {//{{{
 var app = {//{{{
     // Application Constructor
     initialize: function() {
-    	// Wait for device API libraries to load
-    	document.addEventListener("deviceready", onDeviceReady, false);
-    },
-    // device APIs are available
-	onDeviceReady: function() {
         this.bindEvents();
         geolocation.start();
         ssid.start();
