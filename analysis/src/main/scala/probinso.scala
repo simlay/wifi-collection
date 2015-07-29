@@ -23,7 +23,7 @@ object probinso {
   
       val c = 2 * atan2(sqrt(a), sqrt(1-a))
       val d = R * c
-      d
+      d * 1000 // km -> m
     }
   
     val xLat : Element[Double] = Uniform(-90.0, 90.0)
@@ -38,13 +38,13 @@ object probinso {
         (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
         distance_function(xLat, xLon, sLat, sLon)
         )
-  
+
       val _power : Element[Double] = Apply(_dist,
         ((dist : Double) => + 20 * log10(frequency) + 100)
         )
-  
+
       val power  : Element[Double] = Normal(_power, 5)
-  
+
       power.addConstraint((d : Double) => pow(0.02, abs(p - d)))
     }
   
