@@ -30,8 +30,8 @@ class transmitterModel(frequency: Double) {
 
   def assertEvidence(lat : Double, lon : Double, p : Double) {
     sLat.addConstraint( (d : Double) => pow(0.02, abs(lat - d)) )
-    sLat.addConstraint( (d : Double) => pow(0.02, abs(lat - d)) )
-    sLat.addConstraint( (d : Double) => pow(0.02, abs(lat - d)) )
+    sLon.addConstraint( (d : Double) => pow(0.02, abs(lon - d)) )
+    power.addConstraint( (d : Double) => pow(0.02, abs(p - d)) )
   }
 
   def infer = {
