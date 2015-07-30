@@ -2,10 +2,13 @@
 <html>
     <head>
     <style>
-      html, body, #map-canvas {
+
+      html, body {
         height: 100%;
         margin: 0;
         padding: 0;
+        background-color: #444444;
+        color: #CCCCCC;
       }
 
       #selection {
@@ -13,20 +16,70 @@
             z-index: 10;
         }
 
+    .ui-menu {
+        list-style: none;
+        padding:    2px;
+        margin:     0;
+        display:    block;
+        height:     200px;
+        overflow:hidden;
+        overflow-y:auto;
+        font-size:  24px;
+        font-family:Lucida Console;
+    }
 
-    </style>
+    #content {
+  margin-left:  20%;
+}
+    #map-canvas {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #444444;
+ 
+}
 
+
+
+#sideBar{
+    width:70%;
+    height:100%;
+    background:red;
+    display:block;
+    float:left;
+}
+
+#mainContent{
+    width:25%;
+    height:200px;
+    background: #333333;
+    margin: 20px;
+    margin-top: 300px;
+        padding: 20px;
+    display:inline-block;
+}
+
+
+    #hotspots {text-align: left}
+
+    </style>    
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <link rel="stylesheet" href="jq/jquery-ui.min.css">
+        <script type="text/javascript" src="jq/jquery-ui.min.js"></script>
         <script type="text/javascript" src="dat.gui.js"></script>
-        <script src="index.js"></script>
+        <script type="text/javascript" src="index.js"></script>
     </head>
     <body>
-        <div id="map-canvas" style="height: 700px"></div>
 
-        <!-- ====== this div will hold the select box ==== -->
-        <div id="selection"></div>
-        <!-- ============================================= -->
+            <div id="sideBar">
+                <div id="map-canvas"></div>
+            </div>
+            <div id="mainContent">
+                <input id="hotspots" style="width:10cm;" value="All Positions / Accuracy">
+            </div>
+        
 
     </body>
 </html>
