@@ -43,8 +43,21 @@
 
 
 \begin{frame}{Domain Problem}
+The end goal of this project is to use wifi power levels to estimate geolocation.
 
+Subproblems
+\begin{itemize}
+\item Given noisy GPS data, infer ourown location
+\item Given our own location and noisy power level readings, infer wireless transmitter location
+\item[$\star$] Given our understanding of noisy wifi power data, infer our own relative location {\em (similar to SLAM)}
+\end{itemize}
+We need to understand
+\begin{itemize}
+\item attinuation of recieved power levels
+\item describe and express models {\em (eg. plate diagrams, PPLs)}
+\end{itemize}
 \end{frame}
+
 \begin{frame}{Implementation - Figaro}
 \begin{multicols}{2}
 \resizebox{!}{1.5in}{\lstinputlisting[
@@ -66,36 +79,36 @@
 \end{frame}
 
 \begin{frame}{Model Discussion and History}
-\begin{center}
 \begin{multicols}{3}
-\includegraphics[height=0.3\textheight]{pictures/1plate.jpg}
-
-%abcd
-\columnbreak
-\includegraphics[height=0.3\textheight]{pictures/2plate.jpg}
-
-%abcd
-\columnbreak
-\includegraphics[height=0.3\textheight]{pictures/3plate.jpg}
-
-%abcd
-\end{multicols}
-\end{center}
 \begin{itemize}
 \item[N] Transmitters
 \item[M] Receivers
 \item[S] Receiver Position
 \item[X] Receiver Position
-\item[r] Power
 \item[A] Attenuation
 \item[D] Distance
+\item[r] Power
+\item[$\hat{r}$]
 \end{itemize}
+\vfill
+\columnbreak
+
+\includegraphics[width=0.3\textheight]{pictures/1plate.jpg}
+
+\includegraphics[width=0.3\textheight]{pictures/2plate.jpg}
+
+\includegraphics[width=0.3\textheight]{pictures/3plate.jpg}
+\vfill\columnbreak
+
+cat
+\end{multicols}
 
 \end{frame}
 
 
 
 \begin{frame}{Implementation - Supporting Technology}
+
 
     \includegraphics[height=0.7\textheight]{pictures/phoneapp.png}
     \begin{itemize}
