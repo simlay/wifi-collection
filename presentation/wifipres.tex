@@ -31,7 +31,7 @@
 
 \subtitle{Geolocation Using Wi-Fi Signal in Figaro}
 
-\author{Sebastian Imlay, Daniel Salvadori, Philip M. Robinson}
+\author{Sebastian Imlay, Daniel Salvadori, Philip Robinson}
 
 \institute{PPAML}
 
@@ -43,6 +43,24 @@
 
 
 \begin{frame}{Domain Problem}
+
+\end{frame}
+\begin{frame}{Implementation - Figaro}
+\begin{multicols}{2}
+\resizebox{!}{1.5in}{\lstinputlisting[
+    basicstyle=\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+  ]{probinso.scala}
+}
+\columnbreak
+
+\begin{itemize}
+\item We all implented our own version of the solution in figaro, and used eachothers solutions to guide us when we got stuck
+\item Fist pass we were writing procedural solutions, and our programs didn't really make sence
+\item Identifying smaller models, and sculpting data to fit those models helped us think about our problem space
+\end{itemize}
+\end{multicols}
 
 \end{frame}
 
@@ -74,6 +92,8 @@
 
 \end{frame}
 
+
+
 \begin{frame}{Implementation - Supporting Technology}
 
     \includegraphics[height=0.7\textheight]{pictures/phoneapp.png}
@@ -92,24 +112,6 @@
 
 \end{frame}
 
-\begin{frame}{Implementation - Figaro}
-\begin{multicols}{2}
-\resizebox{!}{1.5in}{\lstinputlisting[
-    basicstyle=\footnotesize,
-    numbers=left,
-    numberstyle=\tiny\color{gray}
-  ]{probinso.scala}
-}
-\columnbreak
-
-\begin{itemize}
-\item We all implented our own version of the solution in figaro, and used eachothers solutions to guide us when we got stuck
-\item Fist pass we were writing procedural solutions, and our programs didn't really make sence
-\item Identifying smaller models, and sculpting data to fit those models helped us think about our problem space
-\end{itemize}
-\end{multicols}
-
-\end{frame}
 
 \begin{frame}{Insights}
 
