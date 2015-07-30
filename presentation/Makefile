@@ -1,6 +1,6 @@
 TITLE=wifipres
 
-default: $(TITLE).tex 1plate.jpg 2plate.jpg 3plate.jpg
+default: $(TITLE).tex 
 	pdflatex $(TITLE)
 
 clean: 
