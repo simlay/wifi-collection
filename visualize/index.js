@@ -634,7 +634,7 @@ window.onload = function() {
     setTimeout(function () {
         showHeatMap();
         $("#spinner").hide();
-    }, 2000);
+    }, 200);
     
     //$( "#hotspots" ).focus();
     //$( "#hotspots" ).autocomplete( "search", " " );
@@ -642,13 +642,13 @@ window.onload = function() {
 
   $('input').addClass("ui-corner-all");
   $('input').button();
-  $( "#accordion" ).accordion();
-  $( "button" ).button();
-  $( "radioset" ).buttonset();
+  $("accordion").accordion();
+  $("button").button();
+  $("radioset").buttonset();
 
-  $( "tabs" ).tabs();
+  $("tabs").tabs();
 
-  $( "dialog" ).dialog({
+  $("dialog").dialog({
     autoOpen: false,
     width: 400,
     buttons: [
@@ -804,7 +804,7 @@ function plotMap() {
       // Center map on markers
       map.fitBounds(bounds);
 
-      //if (all_hotspots[i].BSSID == "c8:b3:73:4f:50:1a") {
+      //if (all_hotspots[i].BSSID == "c8:b3:73:4f:50:1a" COOL DATA) {
   
       // Draw grid
       //setupRectGrid(bounds);
@@ -836,7 +836,7 @@ function plotMap() {
       //heatmap.setMap(map);
   };
 
-  $.getJSON('db_dump.json', onSuccess);
-
+  //$.getJSON('db_dump.json', onSuccess);
+  $.getJSON('simple_set.json', onSuccess);
 }
 //google.maps.event.addDomListener(window, 'load', plotMap);
