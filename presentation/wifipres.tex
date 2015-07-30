@@ -4,7 +4,25 @@
 \usepackage{multicol}
 \usepackage{verbatim}
 \usepackage{graphicx}
+\usepackage{listings}
 
+% ``define'' Scala
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield},
+  otherkeywords={=>,<-,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]'',
+  morestring=[b]',
+  morestring=[b]"''
+}
 
 \begin{document}
 
@@ -74,6 +92,17 @@
 \end{frame}
 
 \begin{frame}{Implementation - Figaro}
+\begin{multicols}{2}
+\resizebox{!}{1.5in}{\lstinputlisting[
+    basicstyle=\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+  ]{probinso.scala}
+}
+\columnbreak
+
+Hello
+\end{multicols}
 
 \end{frame}
 
