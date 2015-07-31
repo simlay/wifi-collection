@@ -27,27 +27,27 @@ class transmitterModel(frequency: Double) {
   val xLon : Element[Double] = Uniform(-180.0, 180.0)
 
   def conf(radius : Double) = {
-    // placeholder, this function should change radius into sigma
-    radius
+    val k = 2.0 // two standard deviations
+    radius/k
   }
 
   def assertEvidence(lat : Double, lon : Double, rad : Double p : Double) {
 
-    val sLat : Element[Double] = Constant(lat)
-    val sLon : Element[Double] = Constant(lon)
+    val sLat  : Element[Double] = Constant(lat)
+    val sLon  : Element[Double] = Constant(lon)
 
-    val _dist  : Element[Double] = Apply(xLat, xLon, sLat, sLon,
+    val _dist : Element[Double] = Apply(xLat, xLon, sLat, sLon,
       (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
       distance_function(xLat, xLon, sLat, sLon)
       )
 
-    val dist = Normal(_dist, conf(rad))
+    val dist : Element[Double] = Normal(_dist, conf(rad))
 
     val _power : Element[Double] = Apply(dist,
       ((dist : Double) => + 20 * log10(frequency) + 100)
       ) // perfect power without attenuation
 
-    val attenuation : Element[Double] = Uniform(0.4, 9.0)
+    val attenuation : Element[Double] = Uniform(0.4, 0.9)
 
     val power  : Element[Double] = Apply(_power, attenuation,
       (_power : Double, attenuation : Double) =>
