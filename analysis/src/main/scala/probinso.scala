@@ -6,7 +6,7 @@ import com.github.tototoshi.csv.CSVReader
 import com.cra.figaro.algorithm.sampling.{ProposalScheme, MetropolisHastings}
 
 class transmitterModel(frequency: Double) {
-  
+
   def distance_function(
       lat_a : Double, lon_a : Double,
       lat_b : Double, lon_b : Double) = {
@@ -26,7 +26,12 @@ class transmitterModel(frequency: Double) {
   val xLat : Element[Double] = Uniform(-90.0, 90.0)
   val xLon : Element[Double] = Uniform(-180.0, 180.0)
 
-  def assertEvidence(lat : Double, lon : Double, p : Double) {
+  def conf(radius : Double) = {
+    // placeholder, this function should change radius into sigma
+    radius
+  }
+
+  def assertEvidence(lat : Double, lon : Double, rad : Double p : Double) {
 
     val sLat : Element[Double] = Constant(lat)
     val sLon : Element[Double] = Constant(lon)
@@ -36,17 +41,28 @@ class transmitterModel(frequency: Double) {
       distance_function(xLat, xLon, sLat, sLon)
       )
 
-    val _power : Element[Double] = Apply(_dist,
-      ((dist : Double) => + 20 * log10(frequency) + 100)
-      )
+    val dist = Normal(_dist, conf(rad))
 
-    val power  : Element[Double] = Normal(_power, 5)
+    val _power : Element[Double] = Apply(dist,
+      ((dist : Double) => + 20 * log10(frequency) + 100)
+      ) // perfect power without attenuation
+
+    val attenuation : Element[Double] = Uniform(0.4, 9.0)
+
+    val power  : Element[Double] = Apply(_power, attenuation,
+      (_power : Double, attenuation : Double) =>
+      attenuation * _power
+      )
 
     power.addConstraint((d : Double) => pow(0.02, abs(p - d)))
   }
 
-  def infer = {
-     val algorithm = MetropolisHastings(20000, ProposalScheme.default, xLat, xLon)
+  def inferFromEvidence = {
+     val steps = 2000000
+     val algorithm = MetropolisHastings(
+       steps, ProposalScheme.default,
+       xLat, xLon
+     )
      algorithm.start()
      val retLat = algorithm.expectation(xLat, (i: Double) => i)
      val retLon = algorithm.expectation(xLon, (i: Double) => i)
@@ -65,11 +81,15 @@ object probinso {
       if (!(transmitters.contains(line(6))))
         transmitters += (line(6) -> new transmitterModel(line(7).toDouble))
 
-      transmitters(line(6)).assertEvidence(line(2).toDouble, line(3).toDouble,  line(8).toDouble)
+      transmitters(line(6)).assertEvidence(
+        line(2).toDouble,
+        line(3).toDouble,
+        line(8).toDouble
+      )
     }
 
     for ((key, value) <- transmitters)
-      println(key :: value.infer)
+      println(key :: value.inferFromEvidence)
 
     println()
     println("Yo Dog!")
