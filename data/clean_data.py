@@ -59,6 +59,7 @@ def main():
     time_key = lambda (_lat, _lon, _acc, time, _ssids): time
     extracted_data = sorted(extract_data("db_dump.json"), key=time_key)
 
+    # range (1, 100) meters
     acceptable_accuracy = lambda (_lat, _lon, acc, _time, _ssids): acc < 15
     (failed, succ) = splitfilter(extracted_data, acceptable_accuracy)
 
@@ -71,6 +72,7 @@ def main():
 
     print map(len, datasets)
 
+    # power range (-100, -10) dB
     acceptable_power    = lambda level : level > -75
     with open("tables.csv", 'wb') as csvfile:
         writer = csv.writer(csvfile)
