@@ -6,52 +6,64 @@ import com.github.tototoshi.csv.CSVReader
 import com.cra.figaro.algorithm.sampling.{ProposalScheme, MetropolisHastings}
 
 
-
 object probinso {
-  class transmitterModel(frequency: Double) {
+class transmitterModel(frequency: Double) {
 
-    def distance_function(
-        lat_a : Double, lon_a : Double,
-        lat_b : Double, lon_b : Double) = {
-      val R = 6371.0
-      val dLat = toRadians(lat_b - lat_a)
-      val dLon = toRadians(lon_b - lon_a)
+  def distance_function(
+      lat_a : Double, lon_a : Double,
+      lat_b : Double, lon_b : Double) = {
+    val R = 6371.0
+    val dLat = toRadians(lat_b - lat_a)
+    val dLon = toRadians(lon_b - lon_a)
 
-      val a = sin(dLat/2.0) * sin(dLat/2.0) +
-              cos(toRadians(lat_a)) * cos(toRadians(lat_b)) *
-              sin(dLon/2.0) * sin(dLon/2.0)
-  
-      val c = 2 * atan2(sqrt(a), sqrt(1-a))
-      val d = R * c
-      d * 1000 // km -> m
-    }
+    val a = sin(dLat/2.0) * sin(dLat/2.0) +
+            cos(toRadians(lat_a)) * cos(toRadians(lat_b)) *
+            sin(dLon/2.0) * sin(dLon/2.0)
+
+    val c = 2 * atan2(sqrt(a), sqrt(1-a))
+    val d = R * c
+    d
+  }
 
     val myUniverse = new Universe()
+
     val xLat : Element[Double] = Uniform(-90.0, 90.0)
     val xLon : Element[Double] = Uniform(-180.0, 180.0)
 
-    //val xPow : Element[Double] = Normal(50, 10)
+  def conf(radius : Double) = {
+    val k = 2.0 // two standard deviations
+    radius/k
+  }
 
-    def assertEvidence(lat : Double, lon : Double, p : Double) {
+  def assertEvidence(lat : Double, lon : Double, rad : Double, p : Double) {
 
-      val sLat : Element[Double] = Constant(lat)
-      val sLon : Element[Double] = Constant(lon)
+    val sLat  : Element[Double] = Constant(lat)
+    val sLon  : Element[Double] = Constant(lon)
 
-      val _dist  : Element[Double] = Apply(xLat, xLon, sLat, sLon,
-        (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
-        distance_function(xLat, xLon, sLat, sLon)
-        )
+    val _dist : Element[Double] = Apply(xLat, xLon, sLat, sLon,
+      (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
+      distance_function(xLat, xLon, sLat, sLon)
+      )
 
-      val _power : Element[Double] = Apply(_dist,
-        ((dist : Double) => + 20 * log10(frequency) + 92)
-        )
+    val dist : Element[Double] = Normal(_dist, conf(rad))
 
-      val power  : Element[Double] = Normal(_power, 1) // TODO : Justify sigma
+    val _power : Element[Double] = Apply(dist,
+      ((dist : Double) => + 20 * log10(frequency) + 92)
+      ) // perfect power without attenuation
+
+    val attenuation : Element[Double] = Uniform(0.4, 0.9)
+    // TODO : attenuation needs a more realistic distribution
+
+    val power  : Element[Double] = Apply(_power, attenuation,
+      (_power : Double, attenuation : Double) =>
+      attenuation * _power
+      )
 
       power.addConstraint((d : Double) => pow(0.02, abs(p - d)))
     }
 
-    def infer = {
+    def inferFromEvidence = {
+       val steps = 2000000
        val algorithm = MetropolisHastings(2000000, ProposalScheme.default, xLat, xLon)(myUniverse)
        algorithm.start
        val retLat = algorithm.expectation(xLat, (i: Double) => i)
@@ -72,11 +84,16 @@ object probinso {
 
       // TODO : Use a 1:1 (transmitter -> universe) implementation for significant speedup
       //        Presently for every infer all transmitters are being processed over
-      transmitters(line(6)).assertEvidence(line(2).toDouble, line(3).toDouble,  line(8).toDouble)
+      transmitters(line(6)).assertEvidence(
+        line(2).toDouble,
+        line(3).toDouble,
+        line(4).toDouble,
+        line(8).toDouble
+      )
     }
 
     for ((key, value) <- transmitters)
-      println(key :: value.infer)
+      println(key :: value.inferFromEvidence)
 
     println()
     println("Yo Dog!")
