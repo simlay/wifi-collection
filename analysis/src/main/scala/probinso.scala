@@ -40,15 +40,15 @@ class transmitterModel(frequency: Double) {
     val sLat  : Element[Double] = Constant(lat)
     val sLon  : Element[Double] = Constant(lon)
 
-    val _dist : Element[Double] = Apply(xLat, xLon, sLat, sLon,
+    val _distance : Element[Double] = Apply(xLat, xLon, sLat, sLon,
       (xLat: Double, xLon: Double, sLat : Double, sLon : Double) =>
       distance_function(xLat, xLon, sLat, sLon)
       )
 
-    val dist : Element[Double] = Normal(_dist, conf(rad))
+    val distance : Element[Double] = Normal(_distance, conf(rad))
 
-    val _power : Element[Double] = Apply(dist,
-      ((dist : Double) => + 20 * log10(frequency) + 92)
+    val _power : Element[Double] = Apply(distance,
+      ((distance : Double) => + 20 * log10(frequency) + 92)
       ) // perfect power without attenuation
 
     val attenuation : Element[Double] = Uniform(0.4, 0.9)
@@ -63,8 +63,8 @@ class transmitterModel(frequency: Double) {
     }
 
     def inferFromEvidence = {
-       val steps = 2000000
-       val algorithm = MetropolisHastings(2000000, ProposalScheme.default, xLat, xLon)(myUniverse)
+       val steps = 20000000
+       val algorithm = MetropolisHastings(steps, ProposalScheme.default, xLat, xLon)(myUniverse)
        algorithm.start
        val retLat = algorithm.expectation(xLat, (i: Double) => i)
        val retLon = algorithm.expectation(xLon, (i: Double) => i)
