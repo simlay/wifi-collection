@@ -51,7 +51,8 @@ class transmitterModel(frequency: Double) {
       ((distance : Double) => + 20 * log10(frequency) + 92)
       ) // perfect power without attenuation
 
-    val attenuation : Element[Double] = Uniform(0.4, 0.9)
+    // p \in (-100, -10)
+    val attenuation : Element[Double] = Uniform(100.0 + p / 90.0, 1.0)
     // TODO : attenuation needs a more realistic distribution
 
     val power  : Element[Double] = Apply(_power, attenuation,
