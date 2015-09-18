@@ -24,11 +24,11 @@ class transmitterModel(frequency: Double) {
     val d = R * c
     d
   }
-
+    println()
     val myUniverse = new Universe()
 
-    val xLat : Element[Double] = Uniform(-90.0, 90.0)
-    val xLon : Element[Double] = Uniform(-180.0, 180.0)
+    val xLat : Element[Double] = Uniform(40.0, 120.0)
+    val xLon : Element[Double] = Uniform(50.0, 130.0)
 
   def conf(radius : Double) = {
     val k = 2.0 // two standard deviations
@@ -64,7 +64,7 @@ class transmitterModel(frequency: Double) {
     }
 
     def inferFromEvidence = {
-       val steps = 20000000
+       val steps = 200000000
        val algorithm = MetropolisHastings(steps, ProposalScheme.default, xLat, xLon)(myUniverse)
        algorithm.start
        val retLat = algorithm.expectation(xLat, (i: Double) => i)
