@@ -26,10 +26,11 @@ class transmitterModel(frequency: Double) {
     val d = R * c
     d
   }
-    implicit val myUniverse: Universe = new Universe()
 
-    val xLat : Element[Double] = Uniform(0.0, 90.0)
-    val xLon : Element[Double] = Uniform(-180.0, 0.0)
+  implicit val myUniverse: Universe = new Universe()
+
+  val xLat : Element[Double] = Uniform(0.0, 90.0)
+  val xLon : Element[Double] = Uniform(-180.0, 0.0)
 
   def conf(radius : Double) = {
     val k = 2.0 // two standard deviations
@@ -80,7 +81,7 @@ class transmitterModel(frequency: Double) {
     val reader = CSVReader.open(new File("tables.csv"))
     var transmitters : Map[String, transmitterModel] = Map()
     for (line <- reader.all()) {
-      println(line)
+      // println(line)
       if (!(transmitters.contains(line(6))))
         transmitters += (line(6) -> new transmitterModel(line(7).toDouble))
 
