@@ -12,23 +12,24 @@ class transmitterModel(frequency: Double) {
   def distance_function(
       lat_a : Double, lon_a : Double,
       lat_b : Double, lon_b : Double) = {
-    val R = 6371.0
-    val dLat = toRadians(lat_b - lat_a)
-    val dLon = toRadians(lon_b - lon_a)
 
-    val a = sin(dLat/2.0) * sin(dLat/2.0) +
-            cos(toRadians(lat_a)) * cos(toRadians(lat_b)) *
-            sin(dLon/2.0) * sin(dLon/2.0)
+    val R = 6371000.0
+    val ϕ1 = toRadians(lat_a)
+    val ϕ2 = toRadians(lat_b)
+    val Δϕ = toRadians(lat_b - lat_a)
+    val Δλ = toRadians(lon_b - lon_a)
+
+    // haversine
+    val a = pow(sin(Δϕ/2),2) + cos(ϕ1)*cos(ϕ2)*pow(sin(Δλ/2),2)
 
     val c = 2 * atan2(sqrt(a), sqrt(1-a))
     val d = R * c
     d
   }
-    println()
-    val myUniverse = new Universe()
+    implicit val myUniverse: Universe = new Universe()
 
-    val xLat : Element[Double] = Uniform(40.0, 120.0)
-    val xLon : Element[Double] = Uniform(50.0, 130.0)
+    val xLat : Element[Double] = Uniform(0.0, 90.0)
+    val xLon : Element[Double] = Uniform(-180.0, 0.0)
 
   def conf(radius : Double) = {
     val k = 2.0 // two standard deviations
@@ -52,15 +53,15 @@ class transmitterModel(frequency: Double) {
       ) // perfect power without attenuation
 
     // p \in (-100, -10)
-    val attenuation : Element[Double] = Uniform(100.0 + p / 90.0, 1.0)
-    // TODO : attenuation needs a more realistic distribution
+    val attenuation : Element[Double] = Uniform(0.2, 0.8)
+    // TODO : attenuation may need a more realistic distribution
 
     val power  : Element[Double] = Apply(_power, attenuation,
       (_power : Double, attenuation : Double) =>
       attenuation * _power
       )
 
-      power.addConstraint((d : Double) => pow(0.02, abs(p - d)))
+      power.addConstraint((d : Double) => pow(0.02, abs(d-p)))
     }
 
     def inferFromEvidence = {
