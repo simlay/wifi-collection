@@ -69,8 +69,11 @@ object probinso {
       val steps : Int = 2000000000
       val algorithm = MetropolisHastings(steps, ProposalScheme.default, xLat, xLon)(this.myUniverse)
       algorithm.start
-      val retLat : Double = algorithm.expectation(this.xLat, identity)
-      val retLon : Double = algorithm.expectation(this.xLon, identity)
+
+      //val retLat : Double = algorithm.expectation(this.xLat, identity)
+      //val retLon : Double = algorithm.expectation(this.xLon, identity)
+      val retLat : Double = algorithm.expectation(this.xLat, (i: Double => i))
+      val retLon : Double = algorithm.expectation(this.xLon, (i: Double => i))
       algorithm.stop
       algorithm.kill
       List(retLat, retLon)
