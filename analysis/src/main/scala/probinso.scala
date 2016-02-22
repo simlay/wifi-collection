@@ -72,8 +72,8 @@ object probinso {
 
       //val retLat : Double = algorithm.expectation(this.xLat, identity)
       //val retLon : Double = algorithm.expectation(this.xLon, identity)
-      val retLat : Double = algorithm.expectation(this.xLat, (i: Double => i))
-      val retLon : Double = algorithm.expectation(this.xLon, (i: Double => i))
+      val retLat : Double = algorithm.expectation(this.xLat, (i: Double) => i)
+      val retLon : Double = algorithm.expectation(this.xLon, (i: Double) => i)
       algorithm.stop
       algorithm.kill
       List(retLat, retLon)
